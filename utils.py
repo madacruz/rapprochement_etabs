@@ -38,13 +38,13 @@ class KNNModel:
         """
         Renvoie les n établissements les plus proches de l’UAI donné.
         """
-        idx = list(self.uais).index(uai)
-        distances, indices = self.model.kneighbors(
-            [self.df.iloc[idx]], n_neighbors=n + 1
-        )
+        query_vector = self.df.loc[uai].values.reshape(1, -1)
+        distances, indices = self.model.kneighbors(query_vector, n_neighbors=n + 1)
         neighbors = self.uais[indices[0]].tolist()
         distances = distances[0].tolist()
-        return [(u, d) for u, d in zip(neighbors, distances) if u != uai][:n]
+        result = [(u, d) for u, d in zip(neighbors, distances) if u != uai]
+        return result[:n]
+
 
 
 def apply_weights(df, weights):
@@ -113,13 +113,22 @@ class KNNWrapper:
 
 def get_table_voisins(model, uai, annuaire, n=5):
     """
-    Récupère les informations des n voisins depuis l’annuaire.
+    Récupère les informations des n voisins depuis l’annuaire, avec distance correcte.
     """
     voisins = model.get_similars(uai, n)
-    table = annuaire[annuaire["uai"].isin([uai] + [v[0] for v in voisins])].copy()
-    table.insert(0, "distance", [0.0] + [v[1] for v in voisins])
+
+    # Construction du DataFrame avec distances (y compris soi-même à 0.0)
+    data = [(uai, 0.0)] + voisins  # voisins est une liste de tuples (uai, distance)
+    df_dist = pd.DataFrame(data, columns=["uai", "distance"])
+
+    # Jointure avec l’annuaire
+    table = df_dist.merge(annuaire, on="uai", how="left")
+
+    # Tri par distance
     table = table.sort_values(by="distance")
+
     return table
+
 
 
 def compute_uai_status(results, selected_uai):
