@@ -205,8 +205,6 @@ if st.sidebar.button("Lancer l'analyse"):
     df_plot = df_plot.reset_index(drop=True)
     df_plot = df_plot.merge(annuaire, on="uai", how="left")
 
-    st.write(df_plot)
-
     hover_cols = [
         "uai",
         "nom",
