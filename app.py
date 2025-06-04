@@ -60,18 +60,47 @@ uai_list = (
     .tolist()
 )
 selected_uai = st.sidebar.selectbox("Sélectionner un établissement (UAI)", uai_list)
+filtrer_territoire = st.sidebar.checkbox(
+    "Ne proposer que des établissements du même territoire", value=False
+)
 
+if filtrer_territoire:
+    st.sidebar.warning(
+        "Le filtrage par territoire impose l’usage du modèle KNN uniquement.",
+        icon="⚠️",
+    )
 n_voisins = st.sidebar.slider("Nombre de voisins", min_value=1, max_value=10, value=5)
 n_modeles = st.sidebar.slider(
     "Nombre de modèles à comparer", min_value=1, max_value=5, value=3
 )
+
+# Filtrage du territoire si activé
+territoire = annuaire.loc[annuaire["uai"] == selected_uai]
+if not territoire.empty and filtrer_territoire:
+    if is_college:
+        departement = territoire["dpt"].values[0]
+        df_features = df_features_colleges[df_features_colleges.index.isin(
+            annuaire[(annuaire["nature"] == "COLLEGE") & (annuaire["dpt"] == departement)]["uai"]
+        )]
+    else:
+        region = territoire["region"].values[0]
+        df_features = df_features_lycees[df_features_lycees.index.isin(
+            annuaire[(annuaire["nature"] != "COLLEGE") & (annuaire["region"] == region)]["uai"]
+        )]
+else:
+    df_features = df_features_colleges if is_college else df_features_lycees
 
 model_configs = []
 st.sidebar.markdown("---")
 
 for i in range(n_modeles):
     st.sidebar.markdown(f"### Modèle {i+1}")
-    algo = st.sidebar.selectbox(f"Algo {i+1}", ["KNN", "KMeans"], key=f"algo_{i}")
+    if filtrer_territoire:
+        algo = "KNN"
+        st.sidebar.text("Algo : KNN")
+    else:
+        algo = st.sidebar.selectbox(f"Algo {i+1}", ["KNN", "KMeans"], key=f"algo_{i}")
+
 
     weights = {}
     col1, col2 = st.sidebar.columns(2)
@@ -123,7 +152,6 @@ for i in range(n_modeles):
 # --- Analyse ---
 if st.sidebar.button("Lancer l'analyse"):
 
-    df_features = df_features_colleges if is_college else df_features_lycees
     results = []
 
     for i, config in enumerate(model_configs):
@@ -176,6 +204,8 @@ if st.sidebar.button("Lancer l'analyse"):
     # Enrichir avec toutes les variables utiles
     df_plot = df_plot.reset_index(drop=True)
     df_plot = df_plot.merge(annuaire, on="uai", how="left")
+
+    st.write(df_plot)
 
     hover_cols = [
         "uai",
