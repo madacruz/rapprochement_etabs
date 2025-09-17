@@ -10,7 +10,7 @@ def load_data():
     """
     df_colleges = pd.read_parquet("data_streamlit2/features_colleges.parquet")
     df_lycees = pd.read_parquet("data_streamlit2/features_lycees.parquet")
-    annuaire = pd.read_parquet("data_streamlit2/annuaire.parquet")
+    annuaire = pd.read_parquet("data_streamlit/annuaire.parquet")
     return df_colleges, df_lycees, annuaire
 
 
