@@ -8,9 +8,9 @@ def load_data():
     """
     Charge les fichiers Parquet des features et de l'annuaire.
     """
-    df_colleges = pd.read_parquet("data_streamlit/features_colleges.parquet")
-    df_lycees = pd.read_parquet("data_streamlit/features_lycees.parquet")
-    annuaire = pd.read_parquet("data_streamlit/annuaire.parquet")
+    df_colleges = pd.read_parquet("data_streamlit2/features_colleges.parquet")
+    df_lycees = pd.read_parquet("data_streamlit2/features_lycees.parquet")
+    annuaire = pd.read_parquet("data_streamlit2/annuaire.parquet")
     return df_colleges, df_lycees, annuaire
 
 
